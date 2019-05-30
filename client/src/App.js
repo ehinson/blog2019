@@ -1,10 +1,19 @@
 import React from 'react'
 import { Field, reduxForm } from 'redux-form'
+import axios from 'axios'
 
 const SimpleForm = props => {
   const { handleSubmit, pristine, reset, submitting } = props
+  const submit = async (values) => {
+    try {
+      const {data} = await axios.post('/register', {...values})
+      console.log(data)
+    } catch (error) {
+      console.log(error) 
+    }
+  }
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit(submit)}>
       <div>
         <label>Username</label>
         <div>
@@ -42,7 +51,7 @@ const SimpleForm = props => {
         <label>Password</label>
         <div>
           <Field
-            name="password"
+            name="password__confirmation"
             component="input"
             type="password"
             placeholder="Password"

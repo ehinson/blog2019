@@ -21,14 +21,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const uri = require('./config/keys').mongoURI;
 mongoose
-    .connect(uri, { useNewUrlParser: true })
-    .then(() => console.log("MongoDB successfully connected"))
-    .catch(err => console.log(err));
+  .connect(uri, { useNewUrlParser: true })
+  .then(() => console.log("MongoDB successfully connected"))
+  .catch(err => console.log(err));
 
 var db = mongoose.connection;
 db.once('open', function () {
-    console.log("MongoDB successfully connected")
-    // we're connected!
+  console.log("MongoDB successfully connected")
+  // we're connected!
 });
 
 

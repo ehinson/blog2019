@@ -15,32 +15,13 @@ const existingEmail = require("../validation/register").existingEmail;
 const existingUsername = require("../validation/register").existingUsername;
 
 
-const createHash = (password, username, email) => {
-  return bcrypt.genSalt(12, (err, salt) => {
-    if (err) throw err;
-    bcrypt.hash(password, salt, (err, hash) => {
-      if (err) throw err;
-      const newUser = new User({
-        username: username,
-        email: email,
-        password_digest: hash,
-      });
-      newUser
-        .save()
-        .then(user => res.json(user))
-        .catch(err => console.log(err));
-
-    })
-  })
-}
-
 const isValidPassword = (user, password) => {
   return bcrypt.compare(password, user.password);
 }
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
-  res.render('index', { title: 'Express', message: req.flash('message') });
+  res.json({ title: 'Express', message: req.flash('message') });
 });
 
 /* GET sign in page. */
@@ -56,19 +37,19 @@ router.post('/register', [
   check('password__confirmation').exists({ checkFalsy: true }),
   check('password__confirmation').custom(passwordEquality),
 ], passport.authenticate('register', {
-    successRedirect: '/',
-    failureRedirect: '/register',
+    successRedirect: '/login',
+    failureRedirect: '/',
     failureFlash : true 
 }));
 
 /* GET login page. */
 router.get('/login', function (req, res, next) {
-  res.render('login', { title: 'Express', message: req.flash('message') });
+  res.json({ title: 'Express', message: req.flash('message') });
 });
 
 /* GET logout */
 router.get('/logout', function (req, res, next) {
-  res.render('login', { title: 'Express' });
+  res.json({ title: 'Express' });
 });
 
 passport.serializeUser(function(user, done) {
@@ -94,7 +75,22 @@ passport.use('register', new LocalStrategy({
           console.log('User Already Exists with username: ', username);
           return done(null, false, req.flash('message', 'User already exists'));
         }
-        createHash(password, username, req.body.email)
+        bcrypt.genSalt(12, (err, salt) => {
+          if (err) throw err;
+          return bcrypt.hash(password, salt, (err, hash) => {
+            if (err) throw err;
+            const newUser = new User({
+              username: username,
+              email: req.body.email,
+              password_digest: hash,
+            });
+            newUser
+              .save()
+              .then(user => done(null, user))
+              .catch(err => console.log(err));
+      
+          })
+        })
       });
     }
     process.nextTick(findOrCreateUser);

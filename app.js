@@ -1,15 +1,18 @@
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-var mongoose = require('mongoose');
+const express = require('express');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
+const mongoose = require('mongoose');
+const passport  = require('passport');
+const session = require('express-session');
+const flash = require('connect-flash');
 
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+const indexRouter = require('./routes/index');
+const usersRouter = require('./routes/users');
+const keys = require('./config/keys');
 
-
-var app = express();
+const app = express();
 
 
 app.use(logger('dev'));
@@ -17,15 +20,23 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(
+  session({
+    secret: keys.secretOrKey,
+    saveUninitialized: true,
+    resave: true
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(flash());
 
-
-const uri = require('./config/keys').mongoURI;
 mongoose
-  .connect(uri, { useNewUrlParser: true })
+  .connect(keys.mongoURI, { useNewUrlParser: true })
   .then(() => console.log("MongoDB successfully connected"))
   .catch(err => console.log(err));
 
-var db = mongoose.connection;
+const db = mongoose.connection;
 db.once('open', function () {
   console.log("MongoDB successfully connected")
   // we're connected!

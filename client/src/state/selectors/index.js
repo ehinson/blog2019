@@ -1,3 +1,6 @@
+import { createSelector } from "redux-starter-kit";
+
+
 // Define input selector using a string keypath
 const getSubtotal = createSelector(
     ['shop.items'],

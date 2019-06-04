@@ -11,10 +11,10 @@ async function getUser() {
 
 export const createUser = async (values, dispatch) => {
   try {
-    const response = await axios.post('/register', values);
-    console.log(response);
+    const {data} = await axios.post('/api/register', values);
+    return data
   } catch (error) {
     console.error(error);
-    
+    throw error
   } 
 }

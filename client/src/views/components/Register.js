@@ -14,15 +14,31 @@ const validate = values => {
     return errors;
 };
 
+export const createUser = async (values, dispatch) => {
+  try {
+    const {data} = await axios.post('/api/register', values);
+    return data
+  } catch (error) {
+    console.error(error.response);
+    return error
+  } 
+}
+
 // API call to validate values
 const asyncValidate = (values /*, dispatch */) => {
-    return axios.post('/api/register', values).then(() => {
-      // simulate server latency
-      if (['john', 'paul', 'george', 'ringo'].includes(values.username)) {
-        throw { username: 'That username is taken' }
-      }
-    })
-  }
+  return createUser(values).then(({response}) => {
+    console.log(response.data.errors.username, values);
+    
+    // simulate server latency
+    if (Object.keys(response.data.errors).includes('username')) {
+      throw { username: `${response.data.errors.username.msg}` }
+    }
+
+    if (Object.keys(response.data.errors).includes('email')) {
+      throw { email: `${response.data.errors.email.msg}` }
+    }
+  })
+}
 
 const renderField = (
     { input, label, type, meta: { asyncValidating, touched, error } },
@@ -78,5 +94,5 @@ const AsyncValidationForm = props => {
     form: 'asyncValidation', // a unique identifier for this form
     validate,
     asyncValidate,
-    asyncBlurFields: ['username'],
+    asyncBlurFields: ['username', 'email'],
   })(AsyncValidationForm);

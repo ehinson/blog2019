@@ -1,5 +1,6 @@
 import React from 'react';
 import { Field, reduxForm } from 'redux-form';
+import axios from 'axios';
 
 
 const validate = values => {
@@ -13,9 +14,9 @@ const validate = values => {
     return errors;
 };
 
-// API call
+// API call to validate values
 const asyncValidate = (values /*, dispatch */) => {
-    return sleep(1000).then(() => {
+    return axios.post('/api/register', values).then(() => {
       // simulate server latency
       if (['john', 'paul', 'george', 'ringo'].includes(values.username)) {
         throw { username: 'That username is taken' }
@@ -46,10 +47,22 @@ const AsyncValidationForm = props => {
           label="Username"
         />
         <Field
+          name="email"
+          type="text"
+          component={renderField}
+          label="Email"
+        />
+        <Field
           name="password"
           type="password"
           component={renderField}
           label="Password"
+        />
+        <Field
+          name="password__confirmation"
+          type="password"
+          component={renderField}
+          label="Password Confirmation"
         />
         <div>
           <button type="submit" disabled={submitting}>Sign Up</button>

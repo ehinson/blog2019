@@ -8,3 +8,13 @@ async function getUser() {
       console.error(error);
     }
 }
+
+export const createUser = async (values, dispatch) => {
+  try {
+    const response = await axios.post('/register', values);
+    console.log(response);
+  } catch (error) {
+    console.error(error);
+    
+  } 
+}

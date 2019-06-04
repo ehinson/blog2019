@@ -26,21 +26,34 @@ router.get('/', function (req, res, next) {
 
 /* GET sign in page. */
 router.post('/register', [
-  check('username').exists({ checkFalsy: true }),
-  check('username').isEmail(),
-  check('username').custom(existingUsername),
-  check('email').exists({ checkFalsy: true }),
-  check('email').isEmail(),
-  check('email').custom(existingEmail),
-  check('password').exists({ checkFalsy: true }),
-  check('password').isLength({ min: 8 }),
+  check('username', 'The password must be 5+ chars long and contain a number').exists({ checkFalsy: true }),
+  check('username', 'The password must be 5+ chars long and contain a number').isEmail(),
+  check('username', 'The password must be 5+ chars long and contain a number').custom(existingUsername),
+  check('email', 'The password must be 5+ chars long and contain a number').exists({ checkFalsy: true }),
+  check('email', 'The password must be 5+ chars long and contain a number').isEmail(),
+  check('email', 'The password must be 5+ chars long and contain a number').custom(existingEmail),
+  check('password', 'The password must be 5+ chars long and contain a number').exists({ checkFalsy: true }),
+  check('password').isLength({ min: 8 }).withMessage('must be at least 8 chars long'),
   check('password__confirmation').exists({ checkFalsy: true }),
   check('password__confirmation').custom(passwordEquality),
-], passport.authenticate('register', {
-    successRedirect: '/login',
-    failureRedirect: '/',
-    failureFlash : true 
-}));
+], (req, res, next) => {
+  const result = validationResult(req);
+
+  if (!result.isEmpty()) {
+    // Response will contain something like
+    // { errors: [ "body[password]: must be at least 10 chars long" ] }
+    return res.status(400).json({ errors: result.mapped() });
+  }
+
+  passport.authenticate('register', (err, user, info) => {
+    if (err) { return next(err); }
+    if (!user) { return res.status(400).json(info); }
+    req.logIn(user, function(err) {
+      if (err) { return next(err); }
+      return res.redirect('/users/' + user.username);
+    });
+  })(req, res, next)
+});
 
 /* GET login page. */
 router.get('/login', function (req, res, next) {
@@ -65,7 +78,7 @@ passport.deserializeUser(function(id, done) {
 
 
 passport.use('register', new LocalStrategy({
-  passReqToCallback: true
+  passReqToCallback: true,
 },
   function (req, username, password, done) {
     const findOrCreateUser = () => {
@@ -73,12 +86,12 @@ passport.use('register', new LocalStrategy({
         if (err) { return done(err); }
         if (user) {
           console.log('User Already Exists with username: ', username);
-          return done(null, false, req.flash('message', 'User already exists'));
+          return done(null, false, {message: 'User already exists'});
         }
         bcrypt.genSalt(12, (err, salt) => {
-          if (err) throw err;
+          if (err) { return done(err); }
           return bcrypt.hash(password, salt, (err, hash) => {
-            if (err) throw err;
+            if (err) { return done(err); }
             const newUser = new User({
               username: username,
               email: req.body.email,
@@ -87,10 +100,11 @@ passport.use('register', new LocalStrategy({
             newUser
               .save()
               .then(user => done(null, user))
-              .catch(err => console.log(err));
+              .catch(err => done(err));
       
           })
         })
+        return done(null, newUser)
       });
     }
     process.nextTick(findOrCreateUser);

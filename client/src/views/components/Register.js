@@ -1,7 +1,6 @@
 import React from 'react';
 import { Formik } from 'formik';
-import { Redirect } from 'react-router';
-
+import { Redirect } from 'react-router-dom';
 
 const Basic = () => (
   <div>
@@ -9,12 +8,10 @@ const Basic = () => (
     <Formik
       initialValues={{ email: '', password: '' }}
       validate={values => {
-        let errors = {};
+        const errors = {};
         if (!values.email) {
           errors.email = 'Required';
-        } else if (
-          !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)
-        ) {
+        } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
           errors.email = 'Invalid email address';
         }
         return errors;
@@ -33,7 +30,7 @@ const Basic = () => (
         handleChange,
         handleBlur,
         handleSubmit,
-        isSubmitting,
+        isSubmitting
         /* and other goodies */
       }) => (
         <form onSubmit={handleSubmit}>
@@ -59,7 +56,7 @@ const Basic = () => (
         </form>
       )}
     </Formik>
-    {false && <Redirect to='/login/' push={true} />}
+    {true && <Redirect to="/login/" push />}
   </div>
 );
 

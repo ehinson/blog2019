@@ -26,22 +26,20 @@ router.get('/', function (req, res, next) {
 
 /* GET sign in page. */
 router.post('/register', [
-  check('username', 'The password must be 5+ chars long and contain a number').exists({ checkFalsy: true }),
-  check('username', 'The password must be 5+ chars long and contain a number').isEmail(),
-  check('username', 'The password must be 5+ chars long and contain a number').custom(existingUsername),
-  check('email', 'The password must be 5+ chars long and contain a number').exists({ checkFalsy: true }),
-  check('email', 'The password must be 5+ chars long and contain a number').isEmail(),
-  check('email', 'The password must be 5+ chars long and contain a number').custom(existingEmail),
-  check('password', 'The password must be 5+ chars long and contain a number').exists({ checkFalsy: true }),
+  check('username', 'Username cannot be blank').exists({ checkFalsy: true }),
+  check('username', 'Username is not a valid email').isAlphanumeric(),
+  check('username').custom(existingUsername),
+  check('email', 'Email cannot be blank').exists({ checkFalsy: true }),
+  check('email', 'Not a valid email').isEmail(),
+  check('email').custom(existingEmail),
+  check('password', 'Password must be 8+ chars long').exists({ checkFalsy: true }),
   check('password').isLength({ min: 8 }).withMessage('must be at least 8 chars long'),
-  check('password__confirmation').exists({ checkFalsy: true }),
+  check('password__confirmation', 'Password confirmation cannot be blank').exists({ checkFalsy: true }),
   check('password__confirmation').custom(passwordEquality),
 ], (req, res, next) => {
   const result = validationResult(req);
 
   if (!result.isEmpty()) {
-    // Response will contain something like
-    // { errors: [ "body[password]: must be at least 10 chars long" ] }
     return res.status(400).json({ errors: result.mapped() });
   }
 
@@ -50,7 +48,7 @@ router.post('/register', [
     if (!user) { return res.status(400).json(info); }
     req.logIn(user, function(err) {
       if (err) { return next(err); }
-      return res.redirect('/users/' + user.username);
+      return res.status(200).json(user);
     });
   })(req, res, next)
 });
@@ -74,8 +72,6 @@ passport.deserializeUser(function(id, done) {
     done(err, user);
   });
 });
-
-
 
 passport.use('register', new LocalStrategy({
   passReqToCallback: true,
@@ -101,10 +97,9 @@ passport.use('register', new LocalStrategy({
               .save()
               .then(user => done(null, user))
               .catch(err => done(err));
-      
+            
           })
         })
-        return done(null, newUser)
       });
     }
     process.nextTick(findOrCreateUser);

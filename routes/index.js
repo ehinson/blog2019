@@ -1,18 +1,14 @@
 const express = require('express');
-const { check, body, validationResult } = require('express-validator/check');
+const { check, validationResult } = require('express-validator/check');
 
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 
-const keys = require('../config/keys');
 const User = require('../models/User');
 
-const { passwordEquality } = require('../validation/register');
-const { existingEmail } = require('../validation/register');
-const { existingUsername } = require('../validation/register');
+const { passwordEquality, existingEmail, existingUsername } = require('../validation/register');
 
 const isValidPassword = (user, password) => {
   return bcrypt.compare(password, user.password);

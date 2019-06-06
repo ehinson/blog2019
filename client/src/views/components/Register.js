@@ -2,6 +2,7 @@ import React, { Fragment, useState } from 'react';
 import { Redirect } from 'react-router-dom';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as yup from 'yup';
+import axios from 'axios';
 
 const validationSchema = yup.object().shape({
   username: yup
@@ -32,19 +33,34 @@ const validationSchema = yup.object().shape({
 });
 
 // Async Validation
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = async values => {
+  try {
+    const { data } = await axios.post('/api/register', values);
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
 
-const validate = (values, props /* only available when using withFormik */) => {
-  return sleep(1000).then(() => {
-    let errors = {};
-    if (['admin', 'null', 'god'].includes(values.username)) {
-      errors.username = 'Nice try';
-    }
-    // ...
-    if (Object.keys(errors).length) {
-      throw errors;
-    }
-  });
+const validate = values => {
+  return sleep(values)
+    .then(val => val)
+    .catch(err => {
+      const inputErrors = {};
+      const {
+        response: {
+          data: { errors }
+        }
+      } = err;
+
+      if (Object.keys(errors).length) {
+        Object.keys(errors).forEach(field => {
+          inputErrors[field] = errors[field].msg;
+        });
+      }
+
+      throw inputErrors;
+    });
 };
 
 const RegisterForm = () => (
@@ -53,6 +69,7 @@ const RegisterForm = () => (
     <Formik
       initialValues={{ username: '', email: '', password: '', password__confirmation: '' }}
       validate={validate}
+      validateOnBlur
       validationSchema={validationSchema}
       onSubmit={(values, { setSubmitting }) => {
         setTimeout(() => {

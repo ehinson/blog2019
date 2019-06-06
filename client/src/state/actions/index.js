@@ -1,15 +1,15 @@
-import { createAction } from "redux-starter-kit";
+import { createAction } from 'redux-starter-kit';
 
-const increment = createAction('counter/increment')
+const increment = createAction('counter/increment');
 
-let action = increment()
+let action = increment();
 // { type: 'counter/increment' }
 
-action = increment(3)
+action = increment(3);
 // returns { type: 'counter/increment', payload: 3 }
 
-console.log(increment.toString())
+console.log(increment.toString());
 // 'counter/increment'
 
-console.log(`The action type is: ${increment}`)
+console.log(`The action type is: ${increment}`);
 // 'The action type is: counter/increment'

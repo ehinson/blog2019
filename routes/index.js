@@ -1,4 +1,7 @@
+/* eslint-disable consistent-return */
+/* eslint-disable func-names */
 const express = require('express');
+const path = require('path');
 const { check, validationResult } = require('express-validator/check');
 
 const router = express.Router();
@@ -8,7 +11,12 @@ const LocalStrategy = require('passport-local').Strategy;
 
 const User = require('../models/User');
 
-const { passwordEquality, existingEmail, existingUsername } = require('../validation/register');
+const {
+  passwordEquality,
+  existingEmail,
+  existingUsername,
+  registerValidationChain
+} = require('../validation/register');
 
 const isValidPassword = (user, password) => {
   return bcrypt.compare(password, user.password);
@@ -16,55 +24,46 @@ const isValidPassword = (user, password) => {
 
 /* GET home page. */
 router.get('/', function(req, res, _next) {
-  res.json({ title: 'Express', message: req.flash('message') });
+  res.json({ title: 'Express', message: 'message' });
 });
 
 /* GET sign in page. */
-router.post(
-  '/register',
-  [
-    check('username', 'Username cannot be blank').exists({ checkFalsy: true }),
-    check('username', 'Username is not a valid email').isAlphanumeric(),
-    check('username').custom(existingUsername),
-    check('email', 'Email cannot be blank').exists({ checkFalsy: true }),
-    check('email', 'Not a valid email').isEmail(),
-    check('email').custom(existingEmail),
-    check('password', 'Password must be 8+ chars long').exists({ checkFalsy: true }),
-    check('password')
-      .isLength({ min: 8 })
-      .withMessage('must be at least 8 chars long'),
-    check('password__confirmation', 'Password confirmation cannot be blank').exists({
-      checkFalsy: true
-    }),
-    check('password__confirmation').custom(passwordEquality)
-  ],
-  (req, res, next) => {
-    const result = validationResult(req);
+router.post('/validate', registerValidationChain, (req, res) => {
+  const result = validationResult(req);
 
-    if (!result.isEmpty()) {
-      return res.status(400).json({ errors: result.mapped() });
-    }
-
-    passport.authenticate('register', (err, user, info) => {
-      if (err) {
-        return next(err);
-      }
-      if (!user) {
-        return res.status(400).json(info);
-      }
-      req.logIn(user, function(error) {
-        if (error) {
-          return next(error);
-        }
-        return res.status(200).json(user);
-      });
-    })(req, res, next);
+  if (!result.isEmpty()) {
+    return res.status(400).json({ errors: result.mapped() });
   }
-);
+
+  return res.status(200).json({});
+});
+
+router.post('/register', registerValidationChain, (req, res, next) => {
+  const result = validationResult(req);
+
+  if (!result.isEmpty()) {
+    return res.status(400).json({ errors: result.mapped() });
+  }
+
+  passport.authenticate('register', (err, user, info) => {
+    if (err) {
+      return next(err);
+    }
+    if (!user) {
+      return res.status(400).json(info);
+    }
+    req.logIn(user, function(error) {
+      if (error) {
+        return next(error);
+      }
+      return res.status(201).json(user);
+    });
+  })(req, res, next);
+});
 
 /* GET login page. */
 router.get('/login', function(req, res, _next) {
-  res.json({ title: 'Express', message: req.flash('message') });
+  res.sendFile(path.join(__dirname, 'login.html'));
 });
 
 /* GET logout */
@@ -95,16 +94,15 @@ passport.use(
             return done(err);
           }
           if (user) {
-            console.log('User Already Exists with username: ', username);
             return done(null, false, { message: 'User already exists' });
           }
-          bcrypt.genSalt(12, (err, salt) => {
-            if (err) {
-              return done(err);
+          bcrypt.genSalt(12, (err2, salt) => {
+            if (err2) {
+              return done(err2);
             }
-            return bcrypt.hash(password, salt, (err, hash) => {
-              if (err) {
-                return done(err);
+            return bcrypt.hash(password, salt, (err3, hash) => {
+              if (err3) {
+                return done(err3);
               }
               const newUser = new User({
                 username,
@@ -113,8 +111,8 @@ passport.use(
               });
               newUser
                 .save()
-                .then(user => done(null, user))
-                .catch(err => done(err));
+                .then(userObj => done(null, userObj))
+                .catch(error => done(error));
             });
           });
         });

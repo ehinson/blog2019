@@ -3,11 +3,10 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const mongoose = require('mongoose');
-const passport  = require('passport');
+const passport = require('passport');
 const session = require('express-session');
 const flash = require('connect-flash');
 const cors = require('cors');
-
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
@@ -36,7 +35,7 @@ app.use(flash());
 
 mongoose
   .connect(keys.mongoURI, { useNewUrlParser: true })
-  .then(() => console.log("MongoDB successfully connected"))
+  .then(() => console.log('MongoDB successfully connected'))
   .catch(err => console.log(err));
 
 const db = mongoose.connection;
@@ -45,11 +44,10 @@ const db = mongoose.connection;
 //   // we're connected!
 // });
 
-
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-app.get('*', (req,res) =>{
-  res.sendFile(path.join(__dirname+'/dist/index.html'));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname + '/dist/index.html'));
 });
 
 module.exports = app;
